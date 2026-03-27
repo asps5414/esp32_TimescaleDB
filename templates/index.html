@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Factory Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body style="background:#111;color:white;font-family:sans-serif">
+
+<h1>🏭 工廠監控畫面</h1>
+
+<h2>溫度: <span id="temp">--</span> °C</h2>
+
+<canvas id="chart" width="600" height="300"></canvas>
+
+<script>
+
+const ctx = document.getElementById('chart').getContext('2d');
+
+let chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Temperature',
+            data: [],
+            borderColor: 'lime',
+            fill: false
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                ticks: { color: "white" }
+            },
+            x: {
+                ticks: { color: "white" }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: { color: "white" }
+            }
+        }
+    }
+});
+
+function updateData() {
+    fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+
+        let labels = [];
+        let temps = [];
+
+        data.forEach(d => {
+            labels.push(d.time);
+            temps.push(d.temp);
+        });
+
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = temps;
+        chart.update();
+
+        // 顯示最新溫度
+        let latest = temps[temps.length - 1];
+        document.getElementById("temp").innerText = latest;
+
+        // 警報（> 50°C）
+        if (latest > 50) {
+            document.body.style.background = "red";
+        } else {
+            document.body.style.background = "#111";
+        }
+    });
+}
+
+// 每2秒更新
+setInterval(updateData, 2000);
+
+</script>
+
+</body>
+</html>
